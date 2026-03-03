@@ -45,6 +45,14 @@ public class InventoryController {
         return inventoryService.updateInventory(id, inventoryRequest);
     }
 
+    @PutMapping("/reduce/{sku}")
+    @ResponseStatus(HttpStatus.OK)
+    public String reduceStock(@PathVariable String sku,
+                                         @RequestParam Integer quantity) {
+        inventoryService.reduceStock(sku, quantity);
+        return "Se ha reducido el stock exitosamente";
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteInventory(@PathVariable Long id) {

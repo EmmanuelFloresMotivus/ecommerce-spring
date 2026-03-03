@@ -1,4 +1,4 @@
-package com.ecommerce.order_service.service;
+package com.ecommerce.order_service.service.impl;
 
 import com.ecommerce.order_service.dto.OrderRequest;
 import com.ecommerce.order_service.dto.OrderResponse;
@@ -7,10 +7,13 @@ import com.ecommerce.order_service.mapper.OrderMapper;
 import com.ecommerce.order_service.model.Order;
 import com.ecommerce.order_service.model.OrderLineItems;
 import com.ecommerce.order_service.repository.OrderRepository;
+import com.ecommerce.order_service.service.OrderService;
+import com.ecommerce.order_service.service.client.InventoryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +21,11 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class OrderServiceImpl implements OrderService{
+public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
+    private final InventoryClient inventoryClient;
 
     @Override
     @Transactional
@@ -33,6 +37,28 @@ public class OrderServiceImpl implements OrderService{
                 .stream()
                 .map(orderMapper::toOrderLineItems)
                 .toList();
+
+        for(var item : orderLineItems){
+            String sku = item.getSku();
+            Integer quantity = item.getQuantity();
+
+            try {
+//                webClientBuilder.build().put()
+//                        .uri("http://localhost:8082/api/v1/inventory/reduce/" + sku,
+//                                uriBuilder -> uriBuilder.queryParam("quantity", quantity).build())
+//                        .retrieve()
+//                        .bodyToMono(String.class)
+//                        .block();
+
+                inventoryClient.reduceStock(sku, quantity);
+
+            }catch (Exception e){
+                log.error("Error al reducir el stock para el producto {}: {}", sku, e.getMessage());
+                throw new IllegalArgumentException("No se puede procesar la orden: Stock insuficiente o error de inventario.");
+            }
+
+
+        }
 
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
