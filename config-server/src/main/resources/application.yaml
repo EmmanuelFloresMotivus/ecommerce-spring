@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+#          uri: file:///c:/Users/Ivandev/Documents/ecommerce-spring/config-data
+          uri: https://github.com/EmmanuelFloresMotivus/microservice-config-data
+          username: ${GITHUB_USER}
+          password: ${GITHUB_TOKEN}
+          clone-on-start: true
+          default-label: main
+
+server:
+  port: 8888
